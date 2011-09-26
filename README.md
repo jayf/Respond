@@ -76,7 +76,7 @@ Some notes to keep in mind:
 
 - WARNING: Do not include @font-face rules inside a media query. This will crash IE7 and IE8. Simply place @font-face rules in the wide open, as a sibling to other media queries. Isolated test here to demostrate (note: test crashes IE 7&8): http://jsfiddle.net/scottjehl/Ejyj5/1/
 
-- Now supporting media queries in EM units, but with a fixed conversion of 1em = 16px
+- Now supporting media queries in EM units, but with a hardcoded conversion of 1em = 16px
 
 <pre>
     @media screen and (min-width: 55.5em){
