@@ -150,11 +150,9 @@
 				// 1pt = 1/72 inch 
 				// 96 pixels = 1 inch
 				eminpx = 96 * parseFloat(fontSize)/72; 
-			} else {
-				// might also need to add tests for other cases
-				// where fontSize is not expressed in pixels
+			} else if (fontSize.indexOf('px') > -1 {
 				eminpx = parseFloat(fontSize);				
-			}
+			} 
 
 				console.log('docElem '+ docElem.currentStyle.fontSize);
 				console.log('eminpx '+ eminpx);				
