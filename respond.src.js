@@ -20,7 +20,6 @@
 		appendedEls 	= [],
 		parsedSheets 	= {},
 		resizeThrottle	= 30,
-		pixelsToEm		= 16,
 		head 			= doc.getElementsByTagName( "head" )[0] || docElem,
 		links			= head.getElementsByTagName( "link" ),
 		requestQueue	= [],
@@ -115,15 +114,14 @@
 				
 				eachq	= fullq.split( "," );
 				eql		= eachq.length;
-				
 					
 				for( ; j < eql; j++ ){
 					thisq	= eachq[ j ];
 					mediastyles.push( { 
 						media	: thisq.match( /(only\s+)?([a-zA-Z]+)(\sand)?/ ) && RegExp.$2,
 						rules	: rules.length - 1,
-						minw	: thisq.match( /\(min\-width:[\s]*([\s]*[0-9]+\.*[0-9]*)(em|px)[\s]*\)/ ) && (RegExp.$2=='px' ? parseFloat( RegExp.$1 ) : pixelsToEm * parseFloat( RegExp.$1 )),
-						maxw	: thisq.match( /\(max\-width:[\s]*([\s]*[0-9]+\.*[0-9]*)(em|px)[\s]*\)/ ) && (RegExp.$2=='px' ? parseFloat( RegExp.$1 ) : pixelsToEm * parseFloat( RegExp.$1 ))
+						minw	: thisq.match( /\(min\-width:[\s]*([\s]*[0-9]+\.*[0-9]*)(px|em)[\s]*\)/ ) && parseFloat( RegExp.$1 ) + ( RegExp.$2 || "" ), 
+						maxw	: thisq.match( /\(max\-width:[\s]*([\s]*[0-9]+\.*[0-9]*)(px|em)[\s]*\)/ ) && parseFloat( RegExp.$1 ) + ( RegExp.$2 || "" )
 					} );
 				}	
 			}
@@ -143,8 +141,26 @@
 				styleBlocks	= {},
 				dFrag		= doc.createDocumentFragment(),
 				lastLink	= links[ links.length-1 ],
-				now 		= (new Date()).getTime();
-			
+				now 		= (new Date()).getTime(),
+				eminpx		= 16, //
+				fontSize 	= docElem.currentStyle ? docElem.currentStyle.fontSize : document.defaultView.getComputedStyle( docElem, null ).getPropertyValue( "font-size" );
+				
+			if (fontSize.indexOf('pt') > -1) {
+				// convert points to pixels: 
+				// 1pt = 1/72 inch 
+				// 96 pixels = 1 inch
+				eminpx = 96 * parseFloat(fontSize)/72; 
+			} else {
+				// might also need to add tests for other cases
+				// where fontSize is not expressed in pixels
+				eminpx = parseFloat(fontSize);				
+			}
+
+				console.log('docElem '+ docElem.currentStyle.fontSize);
+				console.log('eminpx '+ eminpx);				
+
+
+
 			//throttle resize calls	
 			if( fromResize && lastCall && now - lastCall < resizeThrottle ){
 				clearTimeout( resizeDefer );
@@ -156,10 +172,31 @@
 			}
 										
 			for( var i in mediastyles ){
-				var thisstyle = mediastyles[ i ];
-				if( !thisstyle.minw && !thisstyle.maxw || 
-					( !thisstyle.minw || thisstyle.minw && currWidth >= thisstyle.minw ) && 
-					(!thisstyle.maxw || thisstyle.maxw && currWidth <= thisstyle.maxw ) ){						
+				var thisstyle = mediastyles[ i ],
+					min = thisstyle.minw,
+					max = thisstyle.maxw;
+
+				console.log('MIN '+min);				
+				console.log('MAX '+max);								
+
+				if( min ){
+					min = min.replace( "px", "" );
+					if( min.indexOf( "em" ) > -1 ){
+						min = parseFloat( min.replace( "em", "" ) ) * eminpx;
+					}
+				}
+				if( max ){
+					max = max.replace( "px", "" );
+					if( max.indexOf( "em" ) > -1 ){
+						max = parseFloat( max.replace( "em", "" ) ) * eminpx;
+					}
+				}	
+				console.log('MIN '+min);				
+				console.log('MAX '+max);								
+				
+				if( !min && !max || 
+					( !min || min && currWidth >= min ) && 
+					( !max || max && currWidth <= max ) ){						
 						if( !styleBlocks[ thisstyle.media ] ){
 							styleBlocks[ thisstyle.media ] = [];
 						}
@@ -232,11 +269,6 @@
 	
 	//expose update for re-running respond later on
 	respond.update = ripCSS;
-	
-	//maybe someday expose for adjusting pixelToEm ratio?
-	//would need to re-run translate to be effective
-	//TBD
-	//respond.pixelsToEm = 16;
 	
 	//adjust on resize
 	function callMedia(){
