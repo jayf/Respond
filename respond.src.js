@@ -150,7 +150,7 @@
 				// 1pt = 1/72 inch 
 				// 96 pixels = 1 inch
 				eminpx = 96 * parseFloat(fontSize)/72; 
-			} else if (fontSize.indexOf('px') > -1 {
+			} else if (fontSize.indexOf('px') > -1) {
 				eminpx = parseFloat(fontSize);				
 			} 
 
